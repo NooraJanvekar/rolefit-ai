@@ -1,306 +1,159 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
-import ResultsPreview from './ResultsPreview.jsx'
+import Analyze from './Analyze.jsx'
+import Landing from './Landing.jsx'
+import Opportunities, { OpportunityDetail, OpportunityList } from './Opportunities.jsx'
+import Profile from './Profile.jsx'
+import { completion, titleOf } from './model.js'
+import { Empty, Heading, Mark } from './components.jsx'
 
-const priorities = [
-  'Product',
-  'TPM',
-  'Strategy / Ops',
-  'AI Exposure',
-  'Startup',
-  'Large Company',
-  'Technical Depth',
-  'Ownership',
-  'California',
-  'Texas',
-  'Toronto',
-  'Vancouver',
-  'New York',
+const storageKey = 'rolefit.workspace.v1'
+const initial = { profile: {}, items: [], recent: [] }
+const navigation = [
+  ['overview', 'Overview', '⌂'], ['analyze', 'Analyze', '→'],
+  ['opportunities', 'Opportunities', '▤'], ['profile', 'Career profile', '◎'],
 ]
+const routeFromHash = () => window.location.hash.slice(1)
+
+function load() {
+  try {
+    const data = JSON.parse(localStorage.getItem(storageKey))
+    return data?.profile && Array.isArray(data.items) ? { ...initial, ...data } : initial
+  } catch {
+    return initial
+  }
+}
+
+function dateLabel(value) {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(value))
+}
+
+function Overview({ profile, items, recent, open }) {
+  const [localDate] = useState(() => {
+    const today = new Date()
+    return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+  })
+  const deadlines = items.filter((item) => item.deadline >= localDate && item.status !== 'Closed')
+    .sort((a, b) => a.deadline.localeCompare(b.deadline)).slice(0, 4)
+  const best = [...items].filter((item) => item.analysis.overall !== null)
+    .sort((a, b) => b.analysis.overall - a.analysis.overall)[0]
+  const completeness = completion(profile)
+  return <>
+    <Heading title="Your career workspace">A place to decide what to pursue and keep track of why.</Heading>
+    <div className="overview-lead card"><div><h2>{profile.resumeText ? 'What are you considering next?' : 'Start with your career profile'}</h2>
+      <p>{profile.resumeText ? 'Bring a posting and see how it lines up with what you want.' : 'Add your experience and priorities once, then use them to evaluate roles.'}</p>
+      <a className="button primary" href={profile.resumeText ? '#analyze' : '#onboarding'}>{profile.resumeText ? 'Analyze a role' : 'Build your profile'} →</a></div>
+      <div className="profile-meter"><span>Profile completeness</span><strong>{completeness}%</strong><progress aria-label="Profile completeness" max="100" value={completeness} /></div>
+    </div>
+    <div className="result-grid">
+      <section className="card"><h2>Saved opportunities</h2><p className="metric">{items.length}</p><a href="#opportunities">View opportunities →</a></section>
+      <section className="card"><h2>Highest alignment</h2><p className="metric">{best?.analysis.overall ?? '—'}</p>
+        {best ? <a href={'#opportunities/' + best.id}>{titleOf(best)} →</a> : <p>Save an analyzed role to see it here.</p>}</section>
+      <section className="card"><h2>Upcoming deadlines</h2>
+        {deadlines.length ? <ul>{deadlines.map((item) => <li key={item.id}><a href={'#opportunities/' + item.id}>{titleOf(item)}</a> · {dateLabel(item.deadline)}</li>)}</ul>
+          : <p>Deadlines appear here when you add them to a saved role.</p>}</section>
+    </div>
+    <section className="dashboard-recent"><h2>Recently analyzed</h2>
+      {recent.length ? <OpportunityList items={recent} open={open} /> : <Empty title="Ready when you are"
+        action={<a className="button" href="#analyze">Analyze a role</a>}>Your recent assessments will appear here.</Empty>}</section>
+  </>
+}
 
 function App() {
-  const [selectedPriorities, setSelectedPriorities] = useState([])
-  const [resumeText, setResumeText] = useState('')
-  const [jobDescription, setJobDescription] = useState('')
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [receipt, setReceipt] = useState(null)
+  const [route, setRoute] = useState(routeFromHash)
+  const [state, setState] = useState(load)
+  const [collapsed, setCollapsed] = useState(false)
+  const [storageError, setStorageError] = useState('')
+  const [section, id] = route.split('/')
+  const go = (destination) => { window.location.hash = destination }
 
-  const clearFeedback = () => {
-    setError('')
-    setReceipt(null)
-  }
-
-  const togglePriority = (priority) => {
-    clearFeedback()
-
-    setSelectedPriorities((currentPriorities) => {
-      if (currentPriorities.includes(priority)) {
-        return currentPriorities.filter((item) => item !== priority)
+  useEffect(() => {
+    function onHashChange() {
+      const next = routeFromHash()
+      setRoute(next)
+      if (next === 'how-it-works') requestAnimationFrame(() => document.getElementById(next)?.scrollIntoView())
+      else {
+        window.scrollTo(0, 0)
+        requestAnimationFrame(() => document.getElementById('workspace-main')?.focus())
       }
-
-      return [...currentPriorities, priority]
-    })
-  }
-
-  const handleAnalyze = async () => {
-    if (isLoading) return
-
-    clearFeedback()
-
-    if (!resumeText.trim() && !jobDescription.trim()) {
-      setError('Please add your resume and the job description.')
-      return
     }
-
-    if (!resumeText.trim()) {
-      setError('Please add your resume or profile.')
-      return
+    function onStorage(event) {
+      if (event.key === storageKey || event.key === null) setState(load())
     }
-
-    if (!jobDescription.trim()) {
-      setError('Please add the job description.')
-      return
+    window.addEventListener('hashchange', onHashChange)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+      window.removeEventListener('storage', onStorage)
     }
+  }, [])
 
-    setIsLoading(true)
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000)
-
+  function persist(update) {
     try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          resumeText,
-          jobDescription,
-          selectedPriorities,
-        }),
-        signal: controller.signal,
-      })
-
-      const data = await response.json().catch(() => null)
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error ||
-            'The request failed. Check that your updated backend is running.',
-        )
-      }
-
-      if (
-        !data?.received ||
-        typeof data.received.resumeCharacters !== 'number' ||
-        typeof data.received.jobDescriptionCharacters !== 'number' ||
-        !Array.isArray(data.received.priorities) ||
-        !data.received.priorities.every(
-          (priority) => typeof priority === 'string',
-        )
-      ) {
-        throw new Error('The server returned an unexpected response.')
-      }
-
-      setReceipt(data.received)
-    } catch (requestError) {
-      if (requestError.name === 'AbortError') {
-        setError(
-          'The request took too long. Check that your backend is running and try again.',
-        )
-      } else if (requestError instanceof TypeError) {
-        setError(
-          'Could not reach the backend. Check that both terminals are running.',
-        )
-      } else {
-        setError(
-          requestError.message || 'Something went wrong. Please try again.',
-        )
-      }
-    } finally {
-      clearTimeout(timeoutId)
-      setIsLoading(false)
+      const next = update(load())
+      localStorage.setItem(storageKey, JSON.stringify(next))
+      setState(next)
+      setStorageError('')
+      return true
+    } catch {
+      setStorageError('This browser could not save your changes. Check that browser storage is available and try again.')
+      return false
     }
   }
 
-  return (
-    <div className="app">
-      <header className="header">
-        <div className="brand">RoleFit AI</div>
+  function save(item) {
+    return persist((current) => ({ ...current, items: [item, ...current.items.filter((saved) => saved.id !== item.id)],
+      recent: current.recent.map((recent) => recent.id === item.id ? item : recent) }))
+  }
 
-        <button className="saved-button" type="button">
-          Saved roles
-        </button>
-      </header>
+  function remove(itemId) {
+    if (window.confirm('Delete this opportunity and its analysis from this browser?') &&
+      persist((current) => ({ ...current, items: current.items.filter((item) => item.id !== itemId),
+        recent: current.recent.filter((item) => item.id !== itemId) }))) go('opportunities')
+  }
 
-      <main className="main-content">
-        <section className="hero">
-          <p className="eyebrow">CAREER DECISION TOOL</p>
+  function clear() {
+    if (!window.confirm('Delete your profile, recent analyses, and saved opportunities from this browser?')) return
+    try {
+      localStorage.removeItem(storageKey)
+      setState(initial)
+      setStorageError('')
+      go('overview')
+    } catch {
+      setStorageError('This browser could not delete your RoleFit data.')
+    }
+  }
 
-          <h1>
-            Find the roles that <span>actually</span> fit you.
-          </h1>
-
-          <p className="subtitle">
-            Because job titles don't tell the whole story.
-          </p>
-        </section>
-
-        <section className="input-grid">
-          <div className="input-card">
-            <div className="card-heading">
-              <h2>Resume / Profile</h2>
-
-              <p>
-                Paste your resume, LinkedIn summary, or a short overview of
-                your experience.
-              </p>
-            </div>
-
-            <textarea
-              placeholder="Paste your resume or profile here..."
-              aria-label="Resume or profile"
-              value={resumeText}
-              disabled={isLoading}
-              onChange={(event) => {
-                setResumeText(event.target.value)
-                clearFeedback()
-              }}
-            />
-
-            <div className="character-count">
-              {resumeText.length.toLocaleString()} characters
-            </div>
-          </div>
-
-          <div className="input-card">
-            <div className="card-heading">
-              <h2>Job Description</h2>
-
-              <p>
-                Paste the role you're considering so we can compare it with
-                your background.
-              </p>
-            </div>
-
-            <textarea
-              placeholder="Paste the job description here..."
-              aria-label="Job description"
-              value={jobDescription}
-              disabled={isLoading}
-              onChange={(event) => {
-                setJobDescription(event.target.value)
-                clearFeedback()
-              }}
-            />
-
-            <div className="character-count">
-              {jobDescription.length.toLocaleString()} characters
-            </div>
-          </div>
-        </section>
-
-        <section className="preferences">
-          <div className="preferences-heading">
-            <h2>What matters to you?</h2>
-
-            <p>Select a few priorities to personalize your analysis.</p>
-          </div>
-
-          <div className="chips">
-            {priorities.map((priority) => (
-              <button
-                key={priority}
-                type="button"
-                className={
-                  selectedPriorities.includes(priority)
-                    ? 'chip selected'
-                    : 'chip'
-                }
-                aria-pressed={selectedPriorities.includes(priority)}
-                disabled={isLoading}
-                onClick={() => togglePriority(priority)}
-              >
-                {priority}
-              </button>
-            ))}
-          </div>
-
-          {selectedPriorities.length > 0 && (
-            <p className="selection-summary">
-              {selectedPriorities.length} selected
-            </p>
-          )}
-        </section>
-
-        <div className="cta-wrapper">
-          <button
-            type="button"
-            className="analyze-button"
-            onClick={handleAnalyze}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Sending...' : 'Analyze Fit'}
-          </button>
-
-          {error && (
-            <p className="error-message" role="alert">
-              {error}
-            </p>
-          )}
-        </div>
-
-        <div aria-live="polite" aria-busy={isLoading}>
-          {isLoading && (
-            <section className="results-placeholder">
-              <p>Sending your inputs...</p>
-            </section>
-          )}
-
-          {receipt && (
-            <section className="results-placeholder">
-              <h2>Backend connection successful</h2>
-
-              <p>Your resume, job description, and priorities were received.</p>
-
-              <p>
-                Resume: {receipt.resumeCharacters.toLocaleString()} characters
-                {' · '}
-                Job description:{' '}
-                {receipt.jobDescriptionCharacters.toLocaleString()} characters
-              </p>
-
-              <p>
-                Priorities:{' '}
-                {receipt.priorities.length > 0
-                  ? receipt.priorities.join(', ')
-                  : 'None selected'}
-              </p>
-
-              <p>
-                This confirms the connection. AI analysis is not connected yet.
-              </p>
-            </section>
-          )}
-        </div>
-
-        {receipt ? (
-          <ResultsPreview />
-        ) : (
-          !isLoading && (
-            <section className="results-placeholder">
-              <h2>Analysis Results</h2>
-
-              <p>
-                Your personalized role-fit analysis will appear here.
-              </p>
-            </section>
-          )
-        )}
-      </main>
-    </div>
-  )
+  if (!section || section === 'how-it-works') return <Landing />
+  const item = state.items.find((entry) => entry.id === id) ?? state.recent.find((entry) => entry.id === id)
+  const open = (itemId) => go('opportunities/' + itemId)
+  return <div className={collapsed ? 'workspace collapsed' : 'workspace'}>
+    <aside className="sidebar">
+      <div className="sidebar-top"><a className="brand" href="#" aria-label="RoleFit home"><Mark /><span className="nav-label">RoleFit</span></a>
+        <button type="button" className="collapse-button" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)}>{collapsed ? '›' : '‹'}</button></div>
+      <nav aria-label="Workspace">{navigation.map(([key, label, icon]) => <a href={'#' + key} key={key}
+        aria-label={label} aria-current={section === key || (section === 'onboarding' && key === 'profile') ? 'page' : undefined}>
+        <span aria-hidden="true" className="nav-icon">{icon}</span><span className="nav-label">{label}</span></a>)}</nav>
+    </aside>
+    <main className="workspace-main" id="workspace-main" tabIndex="-1">
+      {storageError && <p className="error" role="alert">{storageError}</p>}
+      {section === 'analyze' && <Analyze profile={state.profile} save={save}
+        remember={(entry) => persist((current) => ({ ...current, recent: [entry, ...current.recent].slice(0, 8) }))} />}
+      {(section === 'profile' || section === 'onboarding') && <Profile key={section} profile={state.profile}
+        onboarding={section === 'onboarding'} clear={clear} save={(profile) => {
+          const success = persist((current) => ({ ...current, profile }))
+          if (success && section === 'onboarding') go('overview')
+          return success
+        }} />}
+      {section === 'opportunities' && (id ? item
+        ? <OpportunityDetail key={id} item={item} save={save} remove={remove} />
+        : <Empty title="Opportunity unavailable" action={<a href="#opportunities">Return to opportunities</a>}>This opportunity isn’t in this browser.</Empty>
+        : <Opportunities items={state.items} open={open} />)}
+      {!['analyze', 'profile', 'onboarding', 'opportunities'].includes(section) &&
+        <Overview {...state} open={open} />}
+    </main>
+  </div>
 }
 
 export default App

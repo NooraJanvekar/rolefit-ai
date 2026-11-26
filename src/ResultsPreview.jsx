@@ -1,91 +1,41 @@
-function ResultsPreview() {
-  return (
-    <section className="analysis-results" aria-labelledby="results-heading">
-      <div className="results-heading">
-        <p className="eyebrow">RESULTS PREVIEW · SAMPLE DATA</p>
+const dimensions = [
+  ['skills', 'Skills alignment'], ['experience', 'Experience alignment'], ['career', 'Career alignment'],
+]
 
-        <h2 id="results-heading">Your role-fit breakdown</h2>
-
-        <p>
-          This example previews the layout. It is not an analysis of your
-          inputs.
-        </p>
-      </div>
-
-      <div className="results-grid">
-        <article className="result-card">
-          <h3>Experience match</h3>
-
-          <p>Where your background connects with the role.</p>
-
-          <ul>
-            <li>
-              Cross-functional project experience aligns with coordinating work
-              across product and engineering.
-            </li>
-
-            <li>
-              Workflow prototyping provides relevant experience for testing and
-              improving new ideas.
-            </li>
-          </ul>
-        </article>
-
-        <article className="result-card">
-          <h3>Priority alignment</h3>
-
-          <p>How the opportunity fits what you want next.</p>
-
-          <ul>
-            <li>
-              Product discovery responsibilities could align with an interest in
-              product management.
-            </li>
-
-            <li>
-              Technical depth is unclear without more detail about the team's
-              engineering collaboration.
-            </li>
-          </ul>
-        </article>
-
-        <article className="result-card">
-          <h3>Gaps and unknowns</h3>
-
-          <p>What needs stronger evidence or clarification.</p>
-
-          <ul>
-            <li>
-              The profile does not yet demonstrate ownership of product success
-              metrics.
-            </li>
-
-            <li>
-              The posting does not specify how much ownership an intern
-              receives.
-            </li>
-          </ul>
-        </article>
-
-        <article className="result-card">
-          <h3>Suggested next step</h3>
-
-          <p>How to act on the assessment.</p>
-
-          <ul>
-            <li>
-              Highlight a project where user feedback influenced what you built.
-            </li>
-
-            <li>
-              Ask the hiring team what an intern would own and how success would
-              be measured.
-            </li>
-          </ul>
-        </article>
-      </div>
+export default function Results({ analysis }) {
+  return <div className="stack results">
+    <section className="card result-summary">
+      <div><h2>Overall alignment</h2><p>{analysis.summary}</p></div>
+      <div className="score">{analysis.overall ?? '—'}{analysis.overall !== null && <small> / 100</small>}</div>
+      <p className="wide">Evidence supports {analysis.coveredWeight}% of the scoring weight. Alignment describes how the role fits your profile and priorities.</p>
     </section>
-  );
+    <div className="result-grid">
+      {dimensions.map(([key, title]) => {
+        const dimension = analysis[key]
+        const { score, weight } = analysis.scores[key]
+        return <article className="card" key={key}>
+          <h3>{title}</h3><p className="metric">{score ?? 'Unscored'}</p>
+          <p className="muted">{weight}% weight · {dimension.confidence} confidence</p>
+          <p>{dimension.explanation}</p>
+          {score !== null && <progress aria-label={title} value={score} max="100" />}
+          {(dimension.evidence.length > 0 || dimension.gaps.length > 0) && <details>
+            <summary>Evidence and gaps</summary>
+          {dimension.evidence.map(({ profile, posting }, index) => <blockquote key={index}>
+            <p><strong>Your profile</strong><br />{profile}</p><p><strong>The posting</strong><br />{posting}</p>
+          </blockquote>)}
+          {dimension.gaps.length > 0 && <><h4>Gaps to review</h4><ul>{dimension.gaps.map((gap, index) => <li key={index}>{gap}</li>)}</ul></>}</details>}
+        </article>
+      })}
+    </div>
+    <section className="card">
+      <h2>Eligibility and logistics</h2>
+      {analysis.eligibility.length ? <ul className="eligibility">{analysis.eligibility.map((item, index) => <li key={index}>
+        <span className="tag" data-status={item.status}>{item.status}</span>
+        <div><strong>{item.requirement}</strong><p>{item.evidence}</p></div>
+      </li>)}</ul> : <p>Review the original posting for eligibility requirements.</p>}
+    </section>
+    <section className="card"><h2>What to do next</h2>
+      {analysis.recommendations.length ? <ol>{analysis.recommendations.map((item, index) => <li key={index}>{item}</li>)}</ol> : <p>Review the gaps and eligibility details before deciding whether to apply.</p>}
+    </section>
+  </div>
 }
-
-export default ResultsPreview;
