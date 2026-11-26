@@ -6,7 +6,7 @@ RoleFit helps you figure out which internships and early-career roles are worth 
 
 ![RoleFit landing page in pastel blue, mint, pink, and lilac](docs/screenshots/landing.png)
 
-## Why I built it
+## Why I built it 🙋🏻‍♀️
 
 When I was applying for internships, I kept asking myself the same questions. Does my experience fit? Am I eligible? What would I highlight on my resume if I applied? I wanted one place to work through those questions and keep track of the roles I actually wanted to pursue.
 
@@ -24,7 +24,7 @@ You bring a job posting and your experience, and it helps you see where you fit,
 
 [See the mobile layout](docs/screenshots/landing-mobile.png) · [See an example assessment](docs/screenshots/analysis-example.png)
 
-## Run this locally
+## Run this locally 🏃🏻‍♀️
 
 Use Node.js 22.12+ or Node.js 24 and npm.
 
@@ -62,7 +62,7 @@ For example, if you picked career priorities and RoleFit can score skills and ex
 
 I show **eligibility** on its own because things like graduation dates or work authorization can affect whether you can apply even when the role looks like a strong fit. Double-check any flagged requirement in the original posting. 
 
-## How I tested it
+## How I tested it 🧪
 
 - **Automated checks.** The tests cover scoring, missing or unsupported evidence, unexpected AI response formats, and invalid API requests. Lint checks the code, and the build checks that the app can be packaged for production.
 - **Browser walkthrough.** I used Chromium to go through onboarding, edit a profile, and save, filter, and delete roles. I ran automated accessibility checks on the landing page, dashboard, and analysis screen.
@@ -76,12 +76,19 @@ npm run lint
 npm run build
 ```
 
-## What I’d build next
+## What I’d build next 📲
 
 I’d use this version for a local walkthrough or a private demo (so this is just between you and I). Right now, you paste the job description into RoleFit. If you include a posting URL, it’s saved so you can revisit the original listing. Your profile and saved roles are available in the browser where you created them.
 
 Before opening RoleFit up to more people, I’d test live analysis end to end and add accounts with private storage so you can pick up on another device. I’d also add per-user request limits and decide where data is hosted and how long it’s kept. After that, I’d like to make it easier to compare roles side by side and track applications after you submit them. I think that would be cool! 
 
-This project is still in progress...
+In general, this project is still in progress :) 
+
+Thanks, 
+
+Noora
+
+<img width="480" height="480" alt="HeartLoveGIFbyLINEFRIENDS" src="https://github.com/user-attachments/assets/66733015-2e1a-40de-8bfc-dae2cb83a774" />
+
 
 For a local preview using the production build, run `npm run build` and then `NODE_ENV=production npm start`. Express serves both the site and API on the local machine. `HOST` and `PORT` let you set the address and port in a managed environment.
