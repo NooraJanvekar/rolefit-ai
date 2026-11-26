@@ -36,25 +36,37 @@ In a second terminal, run `npm run dev` and open the URL Vite prints. Vite proxi
 
 Set `OPENAI_API_KEY` in the local `.env` to enable live analysis. `OPENAI_MODEL` defaults to `gpt-4.1-mini` and can be set to a model that supports structured outputs. OpenAI usage may incur charges. Profile setup, navigation, and the workspace run without an API key.
 
-## Architecture and design
+## How RoleFit works
 
-React and Vite render the landing page and workspace. I used pastel blue, mint, pink, and lilac across the site, with dark text for readability. Inter and the shared form, card, and navigation styles keep the landing page and workspace consistent. Responsive layouts keep the same workflow on smaller screens.
+**What you see.** I built the landing page and workspace with React and Vite. They share the same forms, cards, and navigation, with pastel blue, mint, pink, and lilac and dark text for readability. You can go through the same steps on your phone or desktop.
 
-Express validates requests and sends consented analysis inputs to OpenAI with a server-side key. The model returns structured JSON. The server checks the response shape, verifies quoted alignment evidence against the supplied text, and derives the scores. No resume text is written to server logs. The API uses a request-size limit, a provider timeout, and a process-wide request and concurrency cap.
+**What happens when you click Analyze fit.** Once you agree to share your inputs, the Express server checks them and sends your profile, résumé, and job description to OpenAI. The API key stays on the server, and RoleFit doesn’t log your résumé. OpenAI returns the assessment in a structured format. The server checks that format and looks for the quoted evidence in the text you provided before using it to calculate a score. The server also limits request size, how long a request can run, and how many requests it accepts at once.
 
-Profiles, up to eight recent analyses, and saved opportunities are stored in the current browser. The career profile screen can delete all RoleFit browser data. Browser storage is unencrypted and accessible to anyone with access to that browser profile. Use a trusted browser and consider removing contact details before submitting a resume. Deletion in RoleFit clears browser storage. OpenAI handles submitted information under its own API data policies.
+**What gets saved.** Your profile, your last eight analyses, and your saved roles stay in the browser you used. Anyone with access to that browser profile can read the saved data, so use a browser profile you trust. You can clear it from **Career profile → Delete all RoleFit data**. That clears this browser’s copy. Anything you submit to OpenAI is handled under OpenAI’s API data policies.
 
 ## How I calculate fit
 
-| Dimension | With selected priorities | Without selected priorities |
+I look at three things separately. **Skills** covers what the posting asks you to know. **Experience** covers what you’ve done. **Career fit** covers what you want from your next role. If you select career priorities, they get more weight in the overall score.
+
+| What I look at | With career priorities | Without career priorities |
 | --- | ---: | ---: |
 | Skills | 35% | 45% |
 | Experience | 30% | 40% |
-| Career | 35% | 15% |
+| Career fit | 35% | 15% |
 
-The model classifies each dimension using a rubric. **Limited** maps to 25, **partial** to 60, and **strong** to 90. **Unclear** and dimensions without a verified pair of excerpts remain unscored. The server normalizes the weighted average over the scored dimensions, rounds it to the nearest five, and reports the percentage of the original weight supported by evidence. Eligibility appears separately because a single requirement can determine whether you can apply. Review excerpts and verify important requirements in the original posting.
+The model rates each area as **limited** (25), **partial** (60), **strong** (90), or **unclear** (unscored). To count toward the score, a rating needs a quote the server can find in the posting and another it can find in your supplied background or priorities. The overall score is a weighted average of the areas with evidence, rounded to the nearest five.
+
+For example, if you picked career priorities and RoleFit can score skills and experience but can’t score career fit, it calculates the result from those first two areas and reports **65% evidence coverage** (35% for skills plus 30% for experience). Coverage tells you how much of the original weighting the score reflects.
+
+I show **eligibility** on its own because things like graduation dates or work authorization can affect whether you can apply even when the role looks like a strong fit. Double-check any flagged requirement in the original posting.
 
 ## How I tested it
+
+- **Automated checks.** The tests cover scoring, missing or unsupported evidence, unexpected AI response formats, and invalid API requests. Lint checks the code, and the build checks that the app can be packaged for production.
+- **Browser walkthrough.** I used Chromium to go through onboarding, edit a profile, and save, filter, and delete roles. I ran automated accessibility checks on the landing page, dashboard, and analysis screen.
+- **Live analysis.** The browser walkthrough used an example AI response. Testing a real response and measuring how long it takes requires an OpenAI API key.
+
+To rerun the automated checks locally:
 
 ```sh
 npm test
@@ -62,10 +74,10 @@ npm run lint
 npm run build
 ```
 
-Tests cover scoring, missing or unsupported evidence, structured-response validation, and HTTP input validation. The browser workflow was checked in Chromium with a controlled analysis response. Automated axe checks covered the landing page, dashboard, and analysis screen. A configured provider key is needed to verify live model output and latency.
-
 ## What I’d build next
 
-Run `npm run build` and then `NODE_ENV=production npm start` to serve the site and API together locally. The server binds to loopback by default. `HOST` and `PORT` configure the listener for a managed host.
+I’d use this version for a local walkthrough or a private demo. Right now, you paste the job description into RoleFit. If you include a posting URL, it’s saved so you can revisit the original listing. Your profile and saved roles are available in the browser where you created them.
 
-I’d use this version for a local walkthrough or a private demo. Before opening it to public use, add authentication, per-user access and rate limits, server-side encrypted storage, and an approved hosting and data retention setup. The browser version has no cross-device sync. Posting imports use pasted text. The posting URL is recorded for reference. Comparison views and a dedicated application tracker are future phases.
+Before opening RoleFit up to more people, I’d test live analysis end to end and add accounts with private storage so you can pick up on another device. I’d also add per-user request limits and decide where data is hosted and how long it’s kept. After that, I’d like to make it easier to compare roles side by side and track applications after you submit them.
+
+For a local preview using the production build, run `npm run build` and then `NODE_ENV=production npm start`. Express serves both the site and API on the local machine. `HOST` and `PORT` let you set the address and port in a managed environment.
