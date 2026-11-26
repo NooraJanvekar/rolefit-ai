@@ -71,7 +71,7 @@ export default function Analyze({ profile, save, remember }) {
   }
 
   return <>
-    <Heading title="Analyze a role">See how an opportunity fits your experience, what you want next, and what you need to verify.</Heading>
+    <Heading title="Analyze a role">Paste a posting to see where your experience fits, what’s missing, and what to check before you apply.</Heading>
     <form onSubmit={submit} className="stack">
       <fieldset className="stack form-shell" disabled={busy}>
         <section className="card"><h2>The opportunity</h2>
@@ -91,7 +91,7 @@ export default function Analyze({ profile, save, remember }) {
             I agree to send this posting, my resume, and my career profile to OpenAI for analysis. I can remove contact details before submitting.
           </label>
           <button className="primary">{busy ? 'Analyzing role…' : analysis ? 'Run analysis again' : 'Analyze fit'}</button>
-          <div role="status">{busy && 'Reviewing the posting against your background and priorities.'}</div>
+          <div role="status">{busy && 'Comparing the posting with your experience and priorities.'}</div>
           {error && <p className="error" role="alert">{error}</p>}
         </section>
       </fieldset>

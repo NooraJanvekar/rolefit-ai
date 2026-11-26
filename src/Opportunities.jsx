@@ -44,7 +44,7 @@ export default function Opportunities({ items, open }) {
     return b.dateAdded.localeCompare(a.dateAdded)
   })
   return <>
-    <Heading title="Saved opportunities">Keep the roles you’re considering and revisit the reasoning whenever you need it.</Heading>
+    <Heading title="Saved opportunities">Keep track of the roles you’re considering, what stood out, and what you still need to check.</Heading>
     {items.length ? <>
       <div className="card form-grid filters">
         <Field label="Search opportunities" type="search" value={query} onChange={setQuery} />

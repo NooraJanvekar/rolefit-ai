@@ -39,9 +39,9 @@ function Overview({ profile, items, recent, open }) {
     .sort((a, b) => b.analysis.overall - a.analysis.overall)[0]
   const completeness = completion(profile)
   return <>
-    <Heading title="Your career workspace">A place to decide what to pursue and keep track of why.</Heading>
-    <div className="overview-lead card"><div><h2>{profile.resumeText ? 'What are you considering next?' : 'Start with your career profile'}</h2>
-      <p>{profile.resumeText ? 'Bring a posting and see how it lines up with what you want.' : 'Add your experience and priorities once, then use them to evaluate roles.'}</p>
+    <Heading title="Your career workspace">See which roles you’re considering, why they stood out, and what’s due next.</Heading>
+    <div className="overview-lead card"><div><h2>{profile.resumeText ? 'Have a role in mind?' : 'Start with your career profile'}</h2>
+      <p>{profile.resumeText ? 'Paste the posting to see how it fits what you’re looking for.' : 'Add your experience and priorities once, then use them to evaluate roles.'}</p>
       <a className="button primary" href={profile.resumeText ? '#analyze' : '#onboarding'}>{profile.resumeText ? 'Analyze a role' : 'Build your profile'} →</a></div>
       <div className="profile-meter"><span>Profile completeness</span><strong>{completeness}%</strong><progress aria-label="Profile completeness" max="100" value={completeness} /></div>
     </div>
@@ -54,8 +54,8 @@ function Overview({ profile, items, recent, open }) {
           : <p>Deadlines appear here when you add them to a saved role.</p>}</section>
     </div>
     <section className="dashboard-recent"><h2>Recently analyzed</h2>
-      {recent.length ? <OpportunityList items={recent} open={open} /> : <Empty title="Ready when you are"
-        action={<a className="button" href="#analyze">Analyze a role</a>}>Your recent assessments will appear here.</Empty>}</section>
+      {recent.length ? <OpportunityList items={recent} open={open} /> : <Empty title="Nothing analyzed yet"
+        action={<a className="button" href="#analyze">Analyze a role</a>}>Start with a posting you’re deciding whether to apply to.</Empty>}</section>
   </>
 }
 

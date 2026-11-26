@@ -23,7 +23,7 @@ export default function Results({ analysis }) {
           {dimension.evidence.map(({ profile, posting }, index) => <blockquote key={index}>
             <p><strong>Your profile</strong><br />{profile}</p><p><strong>The posting</strong><br />{posting}</p>
           </blockquote>)}
-          {dimension.gaps.length > 0 && <><h4>Gaps to review</h4><ul>{dimension.gaps.map((gap, index) => <li key={index}>{gap}</li>)}</ul></>}</details>}
+          {dimension.gaps.length > 0 && <><h4>Where you might need a stronger example</h4><ul>{dimension.gaps.map((gap, index) => <li key={index}>{gap}</li>)}</ul></>}</details>}
         </article>
       })}
     </div>
@@ -34,7 +34,7 @@ export default function Results({ analysis }) {
         <div><strong>{item.requirement}</strong><p>{item.evidence}</p></div>
       </li>)}</ul> : <p>Review the original posting for eligibility requirements.</p>}
     </section>
-    <section className="card"><h2>What to do next</h2>
+    <section className="card"><h2>What to check next</h2>
       {analysis.recommendations.length ? <ol>{analysis.recommendations.map((item, index) => <li key={index}>{item}</li>)}</ol> : <p>Review the gaps and eligibility details before deciding whether to apply.</p>}
     </section>
   </div>

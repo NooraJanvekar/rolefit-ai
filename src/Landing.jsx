@@ -1,9 +1,9 @@
 import { Mark } from './components.jsx'
 
 const benefits = [
-  ['See where you fit', 'Compare your experience with what the role asks for, with evidence you can review.'],
-  ['Check what could hold you back', 'Spot eligibility requirements and figure out what you still need to ask.'],
-  ['Keep track of what’s worth pursuing', 'Save the roles you’re considering and come back to your notes when it’s time to apply.'],
+  ['Where does my experience fit?', 'See which parts of your experience line up with the posting and where you might need a stronger example.'],
+  ['Am I eligible?', 'Check requirements like graduation dates and work authorization, and flag anything you need to confirm.'],
+  ['What should I do next?', 'Save the roles you want to come back to, along with your notes and the application deadline.'],
 ]
 
 export default function Landing() {
@@ -15,9 +15,9 @@ export default function Landing() {
     <main id="main">
       <section className="hero wrap">
         <div className="hero-copy">
-          <p className="kicker">Career decisions, made clearer</p>
+          <p className="kicker">For internships and early-career roles</p>
           <h1>Find your<br /><em>next move.</em></h1>
-          <p className="hero-description">See how an internship or early-career role fits your experience, your priorities, and where you want to go next.</p>
+          <p className="hero-description">You found a role that looks interesting. Now figure out how it fits your experience, what you want to learn, and what you’d need to check before applying.</p>
           <div className="actions"><a className="button primary" href="#onboarding">Build your profile <span aria-hidden="true">→</span></a>
             <a className="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↓</span></a></div>
         </div>
@@ -36,8 +36,8 @@ export default function Landing() {
         </figure>
       </section>
       <section className="how" id="how-it-works"><div className="wrap">
-        <h2>Job titles only tell you so much.</h2>
-        <p>RoleFit helps you work through the details that matter before you spend time applying.</p>
+        <h2>Is this role worth applying to?</h2>
+        <p>Start with your profile and a job posting. RoleFit helps you answer the questions I kept coming back to during my own internship search.</p>
         <div className="benefits">{benefits.map(([title, body]) => <article key={title}><h3>{title}</h3><p>{body}</p></article>)}</div>
         <a className="button primary" href="#analyze">Analyze an opportunity <span aria-hidden="true">→</span></a>
       </div></section>

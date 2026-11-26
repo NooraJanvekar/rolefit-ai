@@ -9,7 +9,7 @@ export default function Profile({ profile, onboarding, save, clear }) {
   const update = (key, value) => setDraft((current) => ({ ...current, [key]: value }))
   return <>
     <Heading title={onboarding ? sections[step].title : 'Career profile'}>
-      {onboarding ? 'Share what’s useful now. You can fill in the rest later.' : 'Update the background and priorities RoleFit uses in your analysis.'}
+      {onboarding ? 'Start with what you know. You can come back and fill in the rest anytime.' : 'Keep your experience and priorities up to date so they’re ready the next time you find a role.'}
     </Heading>
     {onboarding && <div className="progress-row"><span>Step {step + 1} of {sections.length}</span>
       <progress aria-label="Profile setup progress" value={step + 1} max={sections.length} /></div>}
