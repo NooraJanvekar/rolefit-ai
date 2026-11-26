@@ -1,22 +1,37 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
-* {
-  box-sizing: border-box;
+:root {
+  font-family: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --canvas: #fcfbff;
+  --surface: #fff;
+  --ink: #25233a;
+  --muted: #514d66;
+  --line: #dfdaeb;
+  --accent: #51407e;
+  --accent-hover: #413166;
+  --blue: #e3efff;
+  --mint: #e2f4eb;
+  --pink: #fae6f0;
+  --lilac: #eee5fb;
+  --lavender-border: #c5b6db;
+  --input-border: #9385a8;
+  --palette-gradient: linear-gradient(132deg, var(--blue), var(--lilac) 44%, var(--pink) 72%, var(--mint));
+  --danger: #87383b;
+  --radius: 18px;
+  --display: Georgia, 'Times New Roman', serif;
 }
-
-html {
-  font-family: "Inter", sans-serif;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: #fbfaff;
-}
-
-button,
-textarea,
-input {
-  font: inherit;
-}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: .65; }
+:focus-visible { outline: 3px solid #526e9b; outline-offset: 3px; }
+h1, h2, h3, h4, p, figure { margin: 0; }
+p, li { line-height: 1.6; }
+p { color: var(--muted); }
+h2 { font-size: 1.28rem; letter-spacing: -.025em; }
+h3 { font-size: 1.1rem; letter-spacing: -.02em; }
+progress { accent-color: var(--accent); }
