@@ -91,4 +91,5 @@ Noora
 <img width="480" height="480" alt="HeartLoveGIFbyLINEFRIENDS" src="https://github.com/user-attachments/assets/66733015-2e1a-40de-8bfc-dae2cb83a774" />
 
 
+
 For a local preview using the production build, run `npm run build` and then `NODE_ENV=production npm start`. Express serves both the site and API on the local machine. `HOST` and `PORT` let you set the address and port in a managed environment.
